@@ -27,47 +27,44 @@ import org.apache.flink.connector.base.source.reader.fetcher.SingleThreadFetcher
 import org.apache.flink.connector.base.source.reader.splitreader.SplitReader;
 import org.apache.flink.connector.base.source.reader.synchronization.FutureCompletingBlockingQueue;
 
-import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
-/**
- * A mock SourceReader class.
- */
+/** A mock SourceReader class. */
 public class MockSourceReader
-		extends SingleThreadMultiplexSourceReaderBase<int[], Integer, MockSourceSplit, AtomicInteger> {
+        extends SingleThreadMultiplexSourceReaderBase<
+                int[], Integer, MockSourceSplit, AtomicInteger> {
 
-	public MockSourceReader(FutureCompletingBlockingQueue<RecordsWithSplitIds<int[]>> elementsQueue,
-							Supplier<SplitReader<int[], MockSourceSplit>> splitFetcherSupplier,
-							Configuration config,
-							SourceReaderContext context) {
-		super(elementsQueue, splitFetcherSupplier, new MockRecordEmitter(), config, context);
-	}
+    public MockSourceReader(
+            FutureCompletingBlockingQueue<RecordsWithSplitIds<int[]>> elementsQueue,
+            Supplier<SplitReader<int[], MockSourceSplit>> splitFetcherSupplier,
+            Configuration config,
+            SourceReaderContext context) {
+        super(elementsQueue, splitFetcherSupplier, new MockRecordEmitter(), config, context);
+    }
 
-	public MockSourceReader(FutureCompletingBlockingQueue<RecordsWithSplitIds<int[]>> elementsQueue,
-							SingleThreadFetcherManager<int[], MockSourceSplit> splitSplitFetcherManager,
-							Configuration config,
-							SourceReaderContext context) {
-		super(elementsQueue, splitSplitFetcherManager, new MockRecordEmitter(), config, context);
-	}
+    public MockSourceReader(
+            FutureCompletingBlockingQueue<RecordsWithSplitIds<int[]>> elementsQueue,
+            SingleThreadFetcherManager<int[], MockSourceSplit> splitSplitFetcherManager,
+            Configuration config,
+            SourceReaderContext context) {
+        super(elementsQueue, splitSplitFetcherManager, new MockRecordEmitter(), config, context);
+    }
 
-	@Override
-	protected void onSplitFinished(Collection<String> finishedSplitIds) {
+    @Override
+    protected void onSplitFinished(Map<String, AtomicInteger> finishedSplitIds) {}
 
-	}
+    @Override
+    protected AtomicInteger initializedState(MockSourceSplit split) {
+        return new AtomicInteger(split.index());
+    }
 
-	@Override
-	protected AtomicInteger initializedState(MockSourceSplit split) {
-		return new AtomicInteger(split.index());
-	}
+    @Override
+    protected MockSourceSplit toSplitType(String splitId, AtomicInteger splitState) {
+        return new MockSourceSplit(Integer.parseInt(splitId), splitState.get());
+    }
 
-	@Override
-	protected MockSourceSplit toSplitType(String splitId, AtomicInteger splitState) {
-		return new MockSourceSplit(Integer.parseInt(splitId), splitState.get());
-	}
-
-	@Override
-	public void notifyCheckpointComplete(long checkpointId) throws Exception {
-
-	}
+    @Override
+    public void notifyCheckpointComplete(long checkpointId) throws Exception {}
 }
